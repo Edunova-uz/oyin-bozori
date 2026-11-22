@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>O‘yinxona — Kirish</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;800&display=swap">
+<style>
+:root{--bg:#171a21;--panel:#1b2838;--field:#32363f;--text:#dcdedf;--mute:#8f98a0;--blue:#1a9fff;--err:#ff7a7a;--ok:#a4d007}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;color:var(--text);font-family:Manrope,system-ui,sans-serif;
+background:radial-gradient(1200px 600px at 75% 10%,#2a475e 0%,transparent 60%),radial-gradient(900px 500px at 10% 90%,#1b2c45 0%,transparent 60%),#0e141b}
+header{background:rgba(23,26,33,.92);border-bottom:1px solid #000;padding:14px 24px;display:flex;align-items:center;gap:10px}
+.logo{font-weight:800;font-size:24px;letter-spacing:-.02em;color:#fff}.logo span{color:var(--blue)}
+.wrap{max-width:1040px;margin:0 auto;padding:48px 20px;display:grid;grid-template-columns:400px 1fr;gap:48px;align-items:center;min-height:calc(100vh - 56px)}
+.card{background:linear-gradient(180deg,rgba(42,71,94,.55),rgba(23,26,33,.85));border:1px solid rgba(255,255,255,.07);border-radius:4px;padding:28px;box-shadow:0 20px 60px rgba(0,0,0,.55)}
+h1{margin:0 0 4px;font-size:26px;color:#fff}
+.sub{margin:0 0 18px;color:var(--mute);font-size:14px}
+.tabs{display:flex;border-bottom:1px solid rgba(255,255,255,.1);margin-bottom:12px}
+.tabs button{flex:1;padding:10px;background:none;border:0;border-bottom:2px solid transparent;color:var(--mute);font:inherit;font-weight:700;cursor:pointer}
+.tabs button[aria-selected="true"]{color:#fff;border-color:var(--blue)}
+label{display:block;font-size:12px;font-weight:700;color:#afb4ba;margin:14px 0 5px;letter-spacing:.02em}
+input{width:100%;padding:11px 12px;border-radius:3px;border:1px solid #000;background:var(--field);color:#fff;font:inherit;box-shadow:inset 1px 1px 3px rgba(0,0,0,.4)}
+input:focus{outline:0;border-color:var(--blue);background:#3a3f49}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.go{width:100%;margin-top:20px;padding:13px;border:0;border-radius:3px;color:#fff;font:inherit;font-weight:800;font-size:15px;cursor:pointer;background:linear-gradient(90deg,#06bfff 0%,#2d73ff 100%);transition:filter .15s}
+.go:hover{filter:brightness(1.15)}.go:disabled{opacity:.6;cursor:wait}
+.eye{position:relative}.eye button{position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:0;color:var(--mute);cursor:pointer;font:inherit;font-size:12px;padding:6px}
+#msg{min-height:22px;margin-top:14px;font-size:14px}.err{color:var(--err)}.ok{color:var(--ok)}
+.note{margin-top:14px;font-size:12px;color:var(--mute)}
+.hide{display:none}
+:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+.warn{background:#3a2a10;border:1px solid #7a5a1a;color:#f3d28a;padding:10px;border-radius:3px;font-size:13px;margin-bottom:14px}
+/* posters */
+.stage{position:relative;height:460px;perspective:1200px}
+.p{position:absolute;width:190px;height:266px;border-radius:3px;box-shadow:0 24px 50px rgba(0,0,0,.7),0 0 0 1px rgba(255,255,255,.08);overflow:hidden}
+.p svg{display:block;width:100%;height:100%}
+.p1{left:2%;top:70px;transform:rotateY(18deg) rotateZ(-6deg)}
+.p2{left:25%;top:20px;transform:rotateY(10deg) rotateZ(-2deg);z-index:2}
+.p3{left:48%;top:50px;transform:rotateY(-10deg) rotateZ(3deg);z-index:3}
+.p4{left:70%;top:100px;transform:rotateY(-18deg) rotateZ(7deg)}
+.tag{position:absolute;left:0;right:0;bottom:0;padding:26px 12px 10px;background:linear-gradient(transparent,rgba(0,0,0,.85));font-weight:800;font-size:15px;color:#fff;text-shadow:0 2px 6px #000}
+.pitch{position:absolute;left:0;bottom:0;max-width:420px;font-size:15px;color:#c6d4df}
+.pitch b{display:block;font-size:22px;color:#fff;margin-bottom:4px}
+@media(max-width:900px){.wrap{grid-template-columns:1fr;gap:20px;padding:24px 16px}.stage{display:none}}
+</style>
+</head>
+<body>
+<header><div class="logo">O‘yin<span>xona</span></div></header>
+<div class="wrap">
+<main class="card">
+<div id="setup" class="warn hide">Sozlash kerak: faylning pastidagi <b>SUPABASE_URL</b> va <b>SUPABASE_KEY</b> qiymatlarini o‘z loyihangiznikiga almashtiring.</div>
+
+<section id="guest">
+<h1 id="h1">Hisob yaratish</h1>
+<p class="sub" id="sub">Bir marta ro‘yxatdan o‘ting. Keyingi safar saytga o‘zi kirib ketadi.</p>
+<div class="tabs" role="tablist">
+<button role="tab" id="tReg" aria-selected="true">Ro‘yxatdan o‘tish</button>
+<button role="tab" id="tLog" aria-selected="false">Kirish</button>
+</div>
+<div id="names" class="two">
+<div><label for="fn">ISM</label><input id="fn" autocomplete="given-name"></div>
+<div><label for="ln">FAMILIYA</label><input id="ln" autocomplete="family-name"></div>
+</div>
+<div id="phoneBox"><label for="ph">TELEFON RAQAMI</label><input id="ph" type="tel" placeholder="+998 90 123 45 67" autocomplete="tel"></div>
+<label for="em">EMAIL</label><input id="em" type="email" autocomplete="email">
+<label for="pw">PAROL (KAMIDA 8 BELGI)</label>
+<div class="eye"><input id="pw" type="password" autocomplete="new-password"><button type="button" id="eye">Ko‘rsatish</button></div>
+<button class="go" id="go">Ro‘yxatdan o‘tish</button>
+<p class="note">Parol hech qayerda ochiq saqlanmaydi. Qurilmangizda faqat kirish belgisi (sessiya) qoladi.</p>
+</section>
+
+<section id="user" class="hide">
+<h1 id="hi"></h1>
+<p class="sub" id="who"></p>
+<a class="go" id="store" href="#" style="display:block;text-align:center;text-decoration:none">Do‘konga o‘tish</a>
+<button class="go" id="out" style="background:#32363f;margin-top:10px">Chiqish</button>
+</section>
+<div id="msg" role="status"></div>
+</main>
+
+<div class="stage" aria-hidden="true">
+<div class="p p1"><svg viewBox="0 0 190 266"><defs><linearGradient id="a" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f2a65a"/><stop offset="1" stop-color="#7a2a10"/></linearGradient></defs><rect width="190" height="266" fill="url(#a)"/><circle cx="130" cy="90" r="34" fill="#ffe3a8"/><path d="M0 180 Q50 140 100 175 T190 165 V266 H0Z" fill="#8c3a14"/><path d="M0 215 Q60 185 120 210 T190 200 V266 H0Z" fill="#4a1a08"/></svg><div class="tag">Qizil Cho‘l</div></div>
+<div class="p p2"><svg viewBox="0 0 190 266"><defs><linearGradient id="b" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7b2ff7"/><stop offset="1" stop-color="#0d1b4c"/></linearGradient></defs><rect width="190" height="266" fill="url(#b)"/><circle cx="95" cy="80" r="40" fill="#ff4fd8" opacity=".85"/><g fill="#0a0f2c"><rect x="10" y="150" width="30" height="116"/><rect x="45" y="120" width="26" height="146"/><rect x="76" y="165" width="34" height="101"/><rect x="115" y="110" width="28" height="156"/><rect x="148" y="145" width="34" height="121"/></g><g fill="#38e8ff" opacity=".9"><rect x="52" y="132" width="4" height="4"/><rect x="60" y="150" width="4" height="4"/><rect x="122" y="125" width="4" height="4"/><rect x="130" y="145" width="4" height="4"/><rect x="156" y="160" width="4" height="4"/></g></svg><div class="tag">Neon Shahar 2077</div></div>
+<div class="p p3"><svg viewBox="0 0 190 266"><defs><linearGradient id="c" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9fd9ff"/><stop offset="1" stop-color="#1f5a35"/></linearGradient></defs><rect width="190" height="266" fill="url(#c)"/><path d="M-10 190 L60 80 L110 170 L140 120 L200 200 V266 H-10Z" fill="#35704a"/><path d="M-10 230 L50 170 L100 225 L160 175 L200 235 V266 H-10Z" fill="#163d24"/><circle cx="150" cy="50" r="18" fill="#fff6c9"/></svg><div class="tag">Tog‘ Vodiysi</div></div>
+<div class="p p4"><svg viewBox="0 0 190 266"><defs><radialGradient id="d" cx=".7" cy=".3" r=".9"><stop offset="0" stop-color="#1d6fd1"/><stop offset="1" stop-color="#030620"/></radialGradient></defs><rect width="190" height="266" fill="url(#d)"/><g fill="#fff"><circle cx="20" cy="30" r="1.5"/><circle cx="60" cy="70" r="1"/><circle cx="160" cy="25" r="1.5"/><circle cx="30" cy="190" r="1"/><circle cx="170" cy="210" r="1.5"/><circle cx="110" cy="40" r="1"/></g><circle cx="95" cy="130" r="42" fill="#c96a3a"/><ellipse cx="95" cy="130" rx="78" ry="14" fill="none" stroke="#f0d3a0" stroke-width="4" transform="rotate(-18 95 130)"/></svg><div class="tag">Kosmik Navbat</div></div>
+<div class="pitch"><b>Sevimli o‘yinlaringiz bir joyda</b>Hisob oching, savatga o‘yin qo‘shing va chegirmalarni birinchilardan bo‘lib oling.</div>
+</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script>
+// Supabase → Project Settings → API. Faqat "anon public" kalit. "service_role" kalitni HECH QACHON bu yerga qo‘ymang.
+const SUPABASE_URL="https://SIZNING-LOYIHA.supabase.co";
+const SUPABASE_KEY="SIZNING_ANON_PUBLIC_KALIT";
+// Kirgandan keyin o‘tiladigan do‘kon sahifasi (shu papkada joylashgan fayl nomi)
+const SITE_URL="https://oyin-bozor.netlify.app/";
+const STORE_URL=SITE_URL;
+
+const $=s=>document.querySelector(s);
+let mode="reg",sb=null,redirecting=false;
+const ok=!SUPABASE_URL.includes("SIZNING")&&!SUPABASE_KEY.includes("SIZNING");
+if(ok){sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true}})}else{$("#setup").classList.remove("hide")}
+
+function say(t,good){const m=$("#msg");m.textContent=t;m.className=good?"ok":"err"}
+function setMode(m){
+ mode=m;const reg=m==="reg";
+ $("#tReg").setAttribute("aria-selected",reg);$("#tLog").setAttribute("aria-selected",!reg);
+ $("#names").classList.toggle("hide",!reg);$("#phoneBox").classList.toggle("hide",!reg);
+ $("#go").textContent=reg?"Ro‘yxatdan o‘tish":"Kirish";
+ $("#h1").textContent=reg?"Hisob yaratish":"Xush kelibsiz";
+ $("#sub").textContent=reg?"Bir marta ro‘yxatdan o‘ting. Keyingi safar saytga o‘zi kirib ketadi.":"Email va parolingiz bilan kiring.";
+ $("#pw").autocomplete=reg?"new-password":"current-password";say("");
+}
+$("#tReg").onclick=()=>setMode("reg");$("#tLog").onclick=()=>setMode("log");
+$("#eye").onclick=()=>{const p=$("#pw"),h=p.type==="password";p.type=h?"text":"password";$("#eye").textContent=h?"Yashirish":"Ko‘rsatish"};
+try{const e=localStorage.getItem("lastEmail");if(e){$("#em").value=e;setMode("log")}}catch(e){}
+
+const msgs={
+ "Invalid login credentials":"Email yoki parol noto‘g‘ri.",
+ "User already registered":"Bu email bilan hisob bor. “Kirish” bo‘limidan kiring.",
+ "Email not confirmed":"Email hali tasdiqlanmagan. Pochtangizdagi xatni tekshiring."
+};
+
+$("#go").onclick=async()=>{
+ if(!sb)return say("Avval Supabase kalitlarini kiriting (fayl pastida).");
+ const email=$("#em").value.trim(),password=$("#pw").value;
+ if(!/^\S+@\S+\.\S+$/.test(email))return say("Email manzilini to‘g‘ri kiriting.");
+ if(password.length<8)return say("Parol kamida 8 belgidan iborat bo‘lsin.");
+ $("#go").disabled=true;say("");
+ try{
+  if(mode==="reg"){
+   const fn=$("#fn").value.trim(),ln=$("#ln").value.trim(),ph=$("#ph").value.trim();
+   if(!fn||!ln)return say("Ism va familiyani kiriting.");
+   if(!/^\+?[0-9\s-]{9,15}$/.test(ph))return say("Telefon raqamini to‘g‘ri kiriting.");
+   const {data,error}=await sb.auth.signUp({email,password,options:{emailRedirectTo:SITE_URL+"royxatdan-otish.html",data:{first_name:fn,last_name:ln,phone:ph}}});
+   if(error)throw error;
+   if(!data.session)say("Tayyor! Emailingizga tasdiqlash xati yuborildi. Havolani bosing, keyin “Kirish”dan kiring.",true);
+  }else{
+   const {error}=await sb.auth.signInWithPassword({email,password});
+   if(error)throw error;
+  }
+  try{localStorage.setItem("lastEmail",email)}catch(e){}
+ }catch(e){say(msgs[e.message]||"Xatolik: "+e.message)}
+ finally{$("#go").disabled=false}
+};
+
+function show(u){
+ const md=u.user_metadata||{};
+ $("#guest").classList.add("hide");$("#user").classList.remove("hide");
+ $("#hi").textContent="Salom, "+(md.first_name||"foydalanuvchi")+"!";
+ $("#who").textContent=u.email;$("#store").href=STORE_URL;say("Do‘konga o‘tilmoqda…",true);
+ if(!redirecting){redirecting=true;setTimeout(()=>{location.href=STORE_URL},1200)}
+}
+$("#out").onclick=async()=>{redirecting=true;await sb.auth.signOut();location.reload()};
+if(sb){
+ sb.auth.getSession().then(({data})=>{if(data.session)show(data.session.user)});
+ sb.auth.onAuthStateChange((ev,s)=>{if(ev==="SIGNED_IN"&&s)show(s.user)});
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>O‘yinxona — Admin</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;800&display=swap">
+<style>
+:root{--field:#32363f;--text:#dcdedf;--mute:#8f98a0;--blue:#1a9fff;--err:#ff7a7a;--ok:#a4d007}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;color:var(--text);font-family:Manrope,system-ui,sans-serif;background:radial-gradient(1000px 500px at 70% 0,#2a475e 0%,transparent 60%),#0e141b;display:grid;place-items:start center;padding:40px 16px}
+.card{width:min(460px,100%);background:linear-gradient(180deg,rgba(42,71,94,.55),rgba(23,26,33,.9));border:1px solid rgba(255,255,255,.07);border-radius:4px;padding:28px;box-shadow:0 20px 60px rgba(0,0,0,.55)}
+.logo{font-weight:800;font-size:22px;color:#fff;margin-bottom:14px}.logo span{color:var(--blue)}
+h1{margin:0 0 4px;font-size:22px;color:#fff}.sub{color:var(--mute);font-size:14px;margin:0 0 10px}
+label{display:block;font-size:12px;font-weight:700;color:#afb4ba;margin:14px 0 5px}
+input{width:100%;padding:11px 12px;border-radius:3px;border:1px solid #000;background:var(--field);color:#fff;font:inherit}
+input:focus{outline:0;border-color:var(--blue)}
+.go{width:100%;margin-top:20px;padding:12px;border:0;border-radius:3px;color:#fff;font:inherit;font-weight:800;cursor:pointer;background:linear-gradient(90deg,#06bfff,#2d73ff)}
+.go:disabled{opacity:.6}.sec{background:#32363f}
+#msg{min-height:22px;margin-top:12px;font-size:14px}.err{color:var(--err)}.ok{color:var(--ok)}
+.hide{display:none}.note{font-size:12px;color:var(--mute);margin-top:12px}
+.warn{background:#3a2a10;border:1px solid #7a5a1a;color:#f3d28a;padding:10px;border-radius:3px;font-size:13px;margin-bottom:14px}
+:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+</style>
+</head>
+<body>
+<main class="card">
+<div class="logo">O‘yin<span>xona</span> · Admin</div>
+<a href="https://oyin-bozor.netlify.app/" style="color:var(--blue);font-size:13px;text-decoration:none">← Do‘konga qaytish</a>
+<div id="setup" class="warn hide">Faylning pastidagi <b>SUPABASE_URL</b> va <b>SUPABASE_KEY</b> qiymatlarini almashtiring.</div>
+
+<section id="login">
+<h1>Admin kirishi</h1><p class="sub">Faqat sizning hisobingiz uchun.</p>
+<label for="em">EMAIL</label><input id="em" type="email" autocomplete="email">
+<label for="pw">PAROL</label><input id="pw" type="password" autocomplete="current-password">
+<button class="go" id="in">Kirish</button>
+</section>
+
+<section id="panel" class="hide">
+<h1 id="hi"></h1><p class="sub">To‘lov uchun kartangiz. Xaridorlar shu ma’lumotni to‘lov oynasida ko‘radi.</p>
+<label for="ow">ISM VA FAMILIYA (karta egasi)</label><input id="ow" autocomplete="name">
+<label for="cd">KARTA RAQAMI (16 raqam)</label><input id="cd" inputmode="numeric" placeholder="0000 0000 0000 0000" autocomplete="off">
+<label for="ct">TELEGRAM (chek yuborish uchun)</label><input id="ct" placeholder="@nomingiz">
+<button class="go" id="save">Serverga saqlash</button>
+<button class="go sec" id="out">Chiqish</button>
+<p class="note">Muddat va CVC kodini bu yerga yozmang. Pul qabul qilish uchun faqat karta raqami va ism yetarli.</p>
+</section>
+<div id="msg" role="status"></div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script>
+const SUPABASE_URL="https://SIZNING-LOYIHA.supabase.co";
+const SUPABASE_KEY="SIZNING_ANON_PUBLIC_KALIT";
+
+const $=s=>document.querySelector(s);
+const say=(t,g)=>{const m=$("#msg");m.textContent=t;m.className=g?"ok":"err"};
+const good=!SUPABASE_URL.includes("SIZNING")&&!SUPABASE_KEY.includes("SIZNING");
+let sb=null;
+if(good)sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);else $("#setup").classList.remove("hide");
+
+const luhn=n=>{let s=0,d=false;for(let i=n.length-1;i>=0;i--){let x=+n[i];if(d){x*=2;if(x>9)x-=9}s+=x;d=!d}return s%10===0};
+const group=n=>n.replace(/(.{4})/g,"$1 ").trim();
+$("#cd").addEventListener("input",e=>{e.target.value=group(e.target.value.replace(/\D/g,"").slice(0,16))});
+
+async function enter(user){
+ const {data}=await sb.from("admins").select("user_id").maybeSingle();
+ if(!data){await sb.auth.signOut();$("#login").classList.remove("hide");$("#panel").classList.add("hide");return say("Bu hisob admin emas.")}
+ $("#login").classList.add("hide");$("#panel").classList.remove("hide");
+ const md=user.user_metadata||{};$("#hi").textContent="Salom, "+(md.first_name||"admin")+"!";
+ const {data:s}=await sb.from("settings").select("card,owner,contact").eq("id",1).maybeSingle();
+ if(s){$("#ow").value=s.owner;$("#cd").value=s.card;$("#ct").value=s.contact}
+ say("");
+}
+
+$("#in").onclick=async()=>{
+ if(!sb)return say("Avval Supabase kalitlarini kiriting.");
+ $("#in").disabled=true;say("");
+ const {data,error}=await sb.auth.signInWithPassword({email:$("#em").value.trim(),password:$("#pw").value});
+ $("#in").disabled=false;
+ if(error)return say("Email yoki parol noto‘g‘ri.");
+ $("#pw").value="";enter(data.user);
+};
+
+$("#save").onclick=async()=>{
+ const owner=$("#ow").value.trim(),card=$("#cd").value.replace(/\D/g,""),contact=$("#ct").value.trim();
+ if(owner.length<3)return say("Ism va familiyani yozing.");
+ if(card.length!==16||!luhn(card))return say("Karta raqami noto‘g‘ri. 16 ta raqamni tekshiring.");
+ $("#save").disabled=true;
+ const {error}=await sb.from("settings").upsert({id:1,owner,card:group(card),contact,updated_at:new Date().toISOString()});
+ $("#save").disabled=false;
+ say(error?"Saqlanmadi: "+error.message:"Saqlandi! Do‘kon endi shu kartani ko‘rsatadi.",!error);
+};
+$("#out").onclick=async()=>{await sb.auth.signOut();location.reload()};
+if(sb)sb.auth.getSession().then(({data})=>{if(data.session)enter(data.session.user)});
+</script>
+</body>
+</html>
